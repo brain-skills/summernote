@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="summernote/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="summernote/summernote-lite.min.js"></script>
+    <style>
+        body{
+            margin: 10px;
+        }
+        input{
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <form id="editorForm" method="post" enctype="multipart/form-data">
+        <input type="text" name="title" id="title" value="Тестовая новость"><br><br>
+        <div id="editor" name="editordata"></div><br><br>
+        <input type="file" name="image_url" id="image_url" placeholder="image_url">
+        <button type="button" id="saveBtn">Save</button>
+    </form>
+    <script>
+        $(document).ready(function(){
+            $('#editor').summernote({
+                placeholder: 'Write your text',
+                tabsize: 2,
+                height: 220,
+                callbacks: {
+                    onImageUpload: function(files) {
+                        // Создаем объект FormData
+                        var formData = new FormData();
+                        formData.append('image', files[0]);
+                        // Отправляем изображение на сервер
+                        $.ajax({
+                            url: 'upload_image.php',
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(imageUrl) {
+                                // Вставляем ссылку на загруженное изображение в редактор
+                                $('#editor').summernote('insertImage', imageUrl);
+                            },
+                            error: function(xhr, status, error) {
+                                console.error(xhr.responseText);
+                            }
+                        });
+                    }
+                }
+            });
+            $('#saveBtn').click(function(event){
+                event.preventDefault();
+                var content = $('#editor').summernote('code');
+                var title = $('#title').val();
+                var formData = new FormData($('#editorForm')[0]);
+                formData.append('content', content);
+                formData.append('title', title);
+                // Отправляем данные формы на сервер
+                $.ajax({
+                    url: 'summernote.php',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
